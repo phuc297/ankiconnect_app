@@ -1,0 +1,49 @@
+
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      # Checkout source code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install uv
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      # Install Python
+      - name: Install Python
+        run: uv python install 3.12
+
+      # Sync dependencies from uv.lock
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+
+      # Build executable
+      - name: Build executable
+        run: |
+          uv run --no-sync pyinstaller `
+            --onefile `
+            --windowed `
+            --name AnkiDueCards `
+            src/ankiconnect_app/app.py 
+
+      # Create GitHub Release
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/AnkiDueCards.exe
+          generate_release_notes: true
