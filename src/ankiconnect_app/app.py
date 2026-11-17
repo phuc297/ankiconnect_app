@@ -37,7 +37,7 @@ def get_decks():
 
 
 def get_due_cards(deck):
-    card_ids = invoke("findCards", query=f"deck:{deck} prop:due=0")
+    card_ids = invoke("findCards", query=f'"deck:{deck}" prop:due=0')
     card_infos = invoke("cardsInfo", cards=card_ids) or []
 
     words = []
@@ -49,7 +49,19 @@ def get_due_cards(deck):
 
 
 def get_all_due_cards(deck):
-    card_ids = invoke("findCards", query=f"deck:{deck} is:due")
+    card_ids = invoke("findCards", query=f'"deck:{deck}" is:due')
+    card_infos = invoke("cardsInfo", cards=card_ids) or []
+
+    words = []
+
+    for card in card_infos:
+        words.append(card["fields"]["Front"]["value"])
+
+    return words
+
+
+def get_new_cards(deck):
+    card_ids = invoke("findCards", query=f'"deck:{deck}" is:new')
     card_infos = invoke("cardsInfo", cards=card_ids) or []
 
     words = []
@@ -64,7 +76,7 @@ class Application:
     def __init__(self, root):
         self.root = root
         root.title("Main")
-        root.geometry("550x550")
+        root.geometry("650x550")
 
         # Configure root layout
         root.columnconfigure(0, weight=1)
@@ -85,17 +97,22 @@ class Application:
         self.due_btn = ttk.Button(
             self.top_frame, text="get today due", command=self.on_due_btn
         )
-        self.due_btn.grid(row=0, column=1, padx=5)
+        self.due_btn.grid(row=0, column=2, padx=5)
 
         self.all_due_btn = ttk.Button(
             self.top_frame, text="get all due", command=self.on_all_due_btn
         )
-        self.all_due_btn.grid(row=0, column=2, padx=5)
+        self.all_due_btn.grid(row=0, column=3, padx=5)
+
+        self.new_btn = ttk.Button(
+            self.top_frame, text="get new", command=self.on_new_btn
+        )
+        self.new_btn.grid(row=0, column=4, padx=5)
 
         self.reload_btn = ttk.Button(
             self.top_frame, text="Load", command=self.on_reload_btn
         )
-        self.reload_btn.grid(row=0, column=3, padx=5)
+        self.reload_btn.grid(row=0, column=5, padx=5)
 
         # Text container
         self.text_frame = ttk.Frame(root)
@@ -123,21 +140,24 @@ class Application:
         )
         self.copy_btn.pack(side="left")
 
-    def on_due_btn(self):
-        selected_deck = self.deck_cbx.get()
-        if not selected_deck:
+    def get_selected_deck(self):
+        if not self.deck_cbx.get():
             messagebox.showwarning("Warning", "Vui lòng chọn deck!")
-            return
-        due_cards = get_due_cards(selected_deck)
+            return []
+        return self.deck_cbx.get()
+
+    def on_due_btn(self):
+        due_cards = get_due_cards(self.get_selected_deck())
         result = "\n".join(due_cards)
         self.change_text_frame(result)
 
     def on_all_due_btn(self):
-        selected_deck = self.deck_cbx.get()
-        if not selected_deck:
-            messagebox.showwarning("Warning", "Vui lòng chọn deck!")
-            return
-        due_cards = get_all_due_cards(selected_deck)
+        due_cards = get_all_due_cards(self.get_selected_deck())
+        result = "\n".join(due_cards)
+        self.change_text_frame(result)
+
+    def on_new_btn(self):
+        due_cards = get_new_cards(self.get_selected_deck())
         result = "\n".join(due_cards)
         self.change_text_frame(result)
 
