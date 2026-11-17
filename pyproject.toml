@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-ankiconnect-app = "ankiconnect_app:main"
+ankiconnect-app = "ankiconnect_app:app"
 
 [build-system]
 requires = ["uv_build>=0.13.0,<0.14.0"]

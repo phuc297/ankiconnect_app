@@ -1,6 +1,9 @@
-import requests
 import tkinter as tk
 from tkinter import messagebox, ttk
+from turtle import onclick
+
+import requests
+
 ANKI_URL = "http://127.0.0.1:8765"
 
 
@@ -45,11 +48,24 @@ def get_due_cards(deck):
 
     return words
 
+
+def get_all_due_cards(deck):
+    card_ids = invoke("findCards", query=f"deck:{deck} is:due")
+    card_infos = invoke("cardsInfo", cards=card_ids) or []
+
+    words = []
+
+    for card in card_infos:
+        words.append(card["fields"]["Front"]["value"])
+
+    return words
+
+
 class Application:
     def __init__(self, root):
         self.root = root
         root.title("Main")
-        root.geometry("400x550")
+        root.geometry("550x550")
 
         # Configure root layout
         root.columnconfigure(0, weight=1)
@@ -67,13 +83,20 @@ class Application:
         if self.decks:
             self.deck_cbx.current(0)
 
-        self.show_btn = ttk.Button(self.top_frame, text="Get due", command=self.on_show_btn)
-        self.show_btn.grid(row=0, column=1, padx=5)
+        self.due_btn = ttk.Button(
+            self.top_frame, text="get today due", command=self.on_due_btn
+        )
+        self.due_btn.grid(row=0, column=1, padx=5)
+
+        self.all_due_btn = ttk.Button(
+            self.top_frame, text="get all due", command=self.on_all_due_btn
+        )
+        self.all_due_btn.grid(row=0, column=2, padx=5)
 
         self.reload_btn = ttk.Button(
             self.top_frame, text="Load", command=self.on_reload_btn
         )
-        self.reload_btn.grid(row=0, column=2, padx=5)
+        self.reload_btn.grid(row=0, column=3, padx=5)
 
         # Text container
         self.text_frame = ttk.Frame(root)
@@ -101,15 +124,23 @@ class Application:
         )
         self.copy_btn.pack(side="left")
 
-    def on_show_btn(self):
+    def on_due_btn(self):
         selected_deck = self.deck_cbx.get()
         if not selected_deck:
             messagebox.showwarning("Warning", "Vui lòng chọn deck!")
             return
         due_cards = get_due_cards(selected_deck)
-        self.result_text.delete("1.0", tk.END)
         result = "\n".join(due_cards)
-        self.result_text.insert(tk.END, result)
+        self.change_text_frame(result)
+
+    def on_all_due_btn(self):
+        selected_deck = self.deck_cbx.get()
+        if not selected_deck:
+            messagebox.showwarning("Warning", "Vui lòng chọn deck!")
+            return
+        due_cards = get_all_due_cards(selected_deck)
+        result = "\n".join(due_cards)
+        self.change_text_frame(result)
 
     def on_copy_btn(self):
         text = self.result_text.get("1.0", "end-1c")
@@ -123,6 +154,11 @@ class Application:
             messagebox.showwarning("Warning", "Không thể kết nối Anki. Hãy mở Anki!")
             return
         self.deck_cbx.current(0)
+
+    def change_text_frame(self, text):
+        self.result_text.delete("1.0", tk.END)
+        self.result_text.insert(tk.END, text)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
