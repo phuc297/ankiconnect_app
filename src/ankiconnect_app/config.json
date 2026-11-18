@@ -1,0 +1,11 @@
+{
+  "url": "http://127.0.0.1:8765",
+  "deck": "english",
+  "mode": "Tất cả thẻ",
+  "field": "Front",
+  "strip_html": true,
+  "dedupe": true,
+  "form_deck": "english",
+  "form_model": "Vocab",
+  "form_tags": "Word"
+}
